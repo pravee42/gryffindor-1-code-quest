@@ -155,8 +155,9 @@ a {
   border-left: 4px solid var(--primary-light);
   font-family: monospace;
   white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow: hidden;
   font-size: 0.9rem;
-  overflow-x: auto;
 }
 
 .quest-question code {

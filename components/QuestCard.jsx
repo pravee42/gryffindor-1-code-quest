@@ -60,7 +60,7 @@ export default function QuestCard({ quest }) {
       </div>
 
       <div className="quest-question">
-        <pre><code>{quest.question}</code></pre>
+          <code>{quest.question}</code>
       </div>
 
       <form onSubmit={handleSubmit}>
