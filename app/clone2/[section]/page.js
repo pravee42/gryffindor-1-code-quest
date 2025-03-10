@@ -1,100 +1,169 @@
-'use client'
-import { useEffect, useState } from 'react';
+'use client';
+import {useEffect, useState} from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
-import styles from '../../Clone2.module.css'; // Slightly different CSS module
-import { sections } from '../../../data/sections';
-import { useParams, useRouter } from 'next/navigation';
+import styles from '../../Clone1.module.css';
+import {sections} from '../../../data/sections';
+import {useParams, useRouter} from 'next/navigation';
 
 export default function Section() {
-    const params = useParams()
-    const section = params?.section ? (params.section) : null;
+  const params = useParams();
+  const section = params?.section ? params.section : null;
+  const router = useRouter();
   const [sectionData, setSectionData] = useState(null);
-  
-  // Random fun images to display in various sections
-  const funImages = [
-    "/decoys/funny.gif",
-    "/decoys/emoji1.gif",
-    "/decoys/cat.gif",
-    "/decoys/dog.gif",
-    "/decoys/surprised.gif",
-  ];
-  
-  // Get a consistent but random image based on section
-  const getRandomImage = (sectionId) => {
-    const index = sectionId.charCodeAt(0) % funImages.length;
-    return funImages[index];
-  };
-  
+  const [spellInput, setSpellInput] = useState('');
+  const [spellMessage, setSpellMessage] = useState('');
+
   useEffect(() => {
     if (section) {
-      // Find the current section data
       const data = sections.find(s => s.id === section) || sections[0];
       setSectionData(data);
+
+      // Console hints for easter eggs
+      if (['loop3', 'mysteriousLever'].includes(section)) {
+        console.log("Hint: Try adding 'secret-exit' to the URL to escape");
+      }
+      if (section === 'library') {
+        console.log("Hint: Use the spell 'Lumos' to reveal a hidden clue.");
+      }
+      if (section === 'vaultOfSecrets') {
+        console.log(
+          "Hint: Try the spell 'Incendio' on cursed objects to reveal a path.",
+        );
+      }
     }
   }, [section]);
-  
+
   if (!sectionData) {
     return <div className={styles.loading}>Loading...</div>;
   }
-  
+
+  // Handle spell input logic
+  const handleSpellSubmit = e => {
+    e.preventDefault();
+
+    const spellActions = {
+      "lumos": () => setSpellMessage("🔦 Lumos! A glowing scroll reveals a hidden clue!"),
+      "alohomora": () => router.push('/clone2/secretChamber'),
+      "incendio": () => setSpellMessage("🔥 Incendio! The cursed object is destroyed, revealing a path."),
+      "expecto patronum": () => setSpellMessage("🦌 A glowing Patronus wards off dark forces and opens a new path!"),
+      "revelio": () => setSpellMessage("🪄 Revelio! Hidden symbols glow along the wall."),
+      "sectumsempra": () => setSpellMessage("⚔️ Uh oh... that was powerful... Be cautious!"),
+      "ictus fortunam": () => {
+        (Math.random() * 100 < 30 )? router.push('/clone2/winner') : router.push('/clone2/greatHall')
+      },
+    };
+
+
+    const normalizedSpell = spellInput.toLowerCase().trim();
+
+    if (spellActions[normalizedSpell]) {
+      spellActions[normalizedSpell]();
+    } else {
+      setSpellMessage('❌ Nothing happened... Maybe try another spell?');
+    }
+
+    setSpellInput('');
+  };
+
   return (
     <div className={styles.container}>
       <Head>
         <title>{sectionData.title} | Maze Challenge</title>
+        {section === 'start' && (
+          <meta
+            name="puzzle-key"
+            content="Look for differences between the clones"
+          />
+        )}
       </Head>
 
       <main className={styles.main}>
         <h1 className={styles.title}>{sectionData.title}</h1>
         <p className={styles.description}>{sectionData.content}</p>
-        
-        {/* Show a funny image instead of the winner image */}
+
+        {/* Show the winner image if this is the winner section */}
         {sectionData.isWinnerSection && (
-          <div className={styles.funContainer}>
-            <h2>You found something, but not the real prize!</h2>
-            <img 
-              src="/decoys/not-winner.webp" 
-              alt="Not the winner" 
-              className={styles.funImage} 
+          <div className={styles.winnerContainer}>
+            <h2>Wow! You’ve successfully found the path where IQ points go to retire</h2>
+            <img
+              src="/decoys/not-winner.webp"
+              alt="Winner"
+              className={styles.winnerImage}
             />
-            <p>Try the other clone! 😉</p>
+            <p>You're like a cloud... when you disappear, it's a brighter day</p>
           </div>
         )}
-        
-        {/* Show a random fun image in some sections */}
-        {!sectionData.isWinnerSection && Math.random() > 0.7 && (
-          <div className={styles.funImageContainer}>
-            <img 
-              src={getRandomImage(section)} 
-              alt="Fun decoration" 
-              className={styles.smallFunImage} 
-            />
+
+        {/* Spell Input Section */}
+        {!sectionData.isWinnerSection && (
+          <div className={styles.spellInputContainer}>
+            <form onSubmit={handleSpellSubmit}>
+              <label htmlFor="spellInput">🧙‍♂️ Cast a Spell:</label>
+              <input
+                id="spellInput"
+                type="text"
+                value={spellInput}
+                onChange={e => setSpellInput(e.target.value)}
+                placeholder="e.g., Lumos"
+                className={styles.spellInput}
+              />
+              <button type="submit" className={styles.spellButton}>
+                Cast
+              </button>
+            </form>
+            {spellMessage && (
+              <p className={styles.spellMessage}>{spellMessage}</p>
+            )}
           </div>
         )}
-        
+
+        {/* Navigation Links */}
         <div className={styles.grid}>
           {sectionData.options.map(option => (
-            <Link href={`/clone2/${option}`} key={option} className={styles.card}>
+            <Link
+              href={`/clone2/${option}`}
+              key={option}
+              className={styles.card}>
               <h2>{option} &rarr;</h2>
             </Link>
           ))}
         </div>
-        
-        {/* Add emojis in some places */}
+
+        {/* Special Hints for Puzzle Sections */}
         {section === 'loop3' && (
-          <div className={styles.emojiContainer}>
-            <span className={styles.emoji}>🔄</span>
-            <span className={styles.emoji}>😵‍💫</span>
-            <span className={styles.emoji}>🌀</span>
+          <div className={styles.secretHint}>
+            🧙 Try adding <b>"secret-exit"</b> to the URL for a magical escape!
           </div>
         )}
-        
+
         {section === 'mysteriousLever' && (
-          <div className={styles.interactiveElement} 
-               onClick={() => router.push('/clone2/trapRoom')}>
+          <div
+            className={styles.interactiveElement}
+            onClick={() => router.push('/clone2/traproom')}>
             <span className={styles.lever}>⬇️</span>
-            <span className={styles.leverCaption}>Pull the lever</span>
+            <span className={styles.leverCaption}>
+              Pull the lever (Careful!)
+            </span>
           </div>
+        )}
+
+        {/* Hidden Link */}
+        {(section === 'treasuryChamber' || section === 'library') && (
+          <a href="/clone2/winner" style={{display: 'none'}}>
+            <span className={styles.invisibleText}>🔎 Secret passage</span>
+          </a>
+        )}
+
+        {/* Late-Stage Puzzle Hints */}
+        {(section === 'secretChamber' || section === 'ancientHall') && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+            console.log("You're very close! Try '/i-am-black-gowda' or follow the glowing path.");
+          `,
+            }}
+          />
         )}
       </main>
     </div>
